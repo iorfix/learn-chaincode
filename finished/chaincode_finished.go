@@ -73,7 +73,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	}
 	fmt.Println("query did not find func: " + function)
 
-	return nil, errors.New("Received unknown function query: " + function)
+	return nil, errors.New("Received unknown function query...: " + function)
 }
 
 // write - invoke function to write key/value pair
