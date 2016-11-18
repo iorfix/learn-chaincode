@@ -60,12 +60,15 @@ func (t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args [
 	}
 
 	var wasteIDs Waste_Holder
+//	var bytes [5]byte 
 	//for debug
-	wasteIDs.wId = [5]string{'1', '2', 'A', 'B', 'AA'}
+//	wasteIDs.wId = [5]string{'1', '2', 'A', 'B', 'AA'}
 
 	bytes, err := json.Marshal(wasteIDs)
 
-    if err != nil { return nil, errors.New("Error creating wasteIDs record") }
+    if err != nil { 
+		return nil, errors.New("Error creating wasteIDs record") 
+	}
 
 	err = stub.PutState("wasteIDs", bytes)
 	if err != nil {
