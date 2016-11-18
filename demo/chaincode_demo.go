@@ -54,7 +54,7 @@ func main() {
 }
 
 // Init resets all the things
-func (t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
@@ -80,7 +80,7 @@ func (t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args [
 
 
 // Invoke isur entry point to invoke a chaincode function
-func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("invoke is running " + function)
 
 	user, err := t.get_username(stub)
@@ -99,7 +99,7 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 }
 
 // Query is our entry point for queries
-func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("query is running " + function)
 
 	// Handle different functions
@@ -112,7 +112,7 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 }
 
 // write - invoke function to write key/value pair
-func (t *SimpleChaincode) newWaste(stub *shim.ChaincodeStub, user string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) newWaste(stub shim.ChaincodeStubInterface, user string, args []string) ([]byte, error) {
 	var id string
 	var quantity int
 	var timestamp int64
@@ -157,7 +157,7 @@ func makeTimestamp() int64 {
 //				  Returns the username as a string.
 //==============================================================================================================================
 
-func (t *SimpleChaincode) get_username(stub *shim.ChaincodeStub) (string, error) {
+func (t *SimpleChaincode) get_username(stub shim.ChaincodeStubInterface) (string, error) {
 
     username, err := stub.ReadCertAttribute("username");
 	if err != nil { return "", errors.New("Couldn't get attribute 'username'. Error: " + err.Error()) }
@@ -166,7 +166,7 @@ func (t *SimpleChaincode) get_username(stub *shim.ChaincodeStub) (string, error)
 
 
 // read - query function to read key/value pair
-func (t *SimpleChaincode) read(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 //	var key, jsonResp string
 //	var err error
 	return nil, errors.New("Non aoncora implementata")
