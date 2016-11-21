@@ -60,6 +60,9 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	}
 
 	var wasteIDs Waste_Holder
+	slcD := []string{"apple", "peach", "pear"}
+	wasteIDs.wId = slcD
+	
 //	var bytes [5]byte 
 	//for debug
 //	wasteIDs.wId = [5]string{'1', '2', 'A', 'B', 'AA'}
@@ -84,9 +87,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	fmt.Println("invoke is running " + function)
 
 	user, err := t.get_username(stub)
-	if err == nil {
-		return nil, errors.New("INVOKE: " + function)
-	}
+	
+	fmt.Println("username: " + user)
+	
 	if err != nil { return nil, errors.New("Error retrieving caller information")}
 
 	// Handle different functions
@@ -141,6 +144,7 @@ func (t *SimpleChaincode) newWaste(stub shim.ChaincodeStubInterface, user string
 	waste.TimestampProduced = timestamp
 	
 	wByte, err := json.Marshal(waste)
+	fmt.Println("Writing:" + string(wByte))
 	if err != nil {
 		return nil, err
 	}
@@ -186,6 +190,7 @@ func (t *SimpleChaincode) readWasteB(stub shim.ChaincodeStubInterface, args []st
 		jsonResp = "{\"Error\":\"Failed to get state for " + key + "\"}"
 		return nil, errors.New(jsonResp)
 	}
+	fmt.Println("Retrieving:" + string(valAsbytes))
 	return valAsbytes, err
 }
 
@@ -204,6 +209,7 @@ func (t *SimpleChaincode) readWaste(stub shim.ChaincodeStubInterface, args []str
 		jsonResp = "{\"Error\":\"Failed to get state for " + key + "\"}"
 		return waste, errors.New(jsonResp)
 	}
+	fmt.Println("Retrieving:" + string(valAsbytes))
 	err = json.Unmarshal(valAsbytes, &waste);
     if err != nil {	
 		fmt.Printf("retrieve WASTE: Corrupt Waste "+string(valAsbytes)+": %s", err) 
