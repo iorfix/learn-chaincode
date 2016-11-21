@@ -86,11 +86,12 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("invoke is running " + function)
 
-	user, err := t.get_username(stub)
+	//user, err := t.get_username(stub)
+	user := "PIPPO"
 	
 	fmt.Println("username: " + user)
 	
-	if err != nil { return nil, err}
+	//if err != nil { return nil, err}
 
 	// Handle different functions
 	if function == "init" {
