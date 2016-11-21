@@ -84,7 +84,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	fmt.Println("invoke is running " + function)
 
 	user, err := t.get_username(stub)
-
+	if err == nil {
+		return nil, errors.New("INVOKE: " + function)
+	}
 	if err != nil { return nil, errors.New("Error retrieving caller information")}
 
 	// Handle different functions
@@ -105,7 +107,9 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	// Handle different functions
 	if function == "readWaste" { //read a variable
 		waste, err := t.readWasteB(stub, args)
-		if err != nil { return nil, err}
+		if err != nil { 
+			return nil, err
+		}
 		//return json.Marshal(waste)
 		 return waste, err
 	}
