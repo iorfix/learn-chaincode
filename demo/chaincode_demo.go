@@ -90,7 +90,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	
 	fmt.Println("username: " + user)
 	
-	if err != nil { return nil, errors.New("Error retrieving caller information")}
+	if err != nil { return nil, err}
 
 	// Handle different functions
 	if function == "init" {
@@ -206,8 +206,10 @@ func (t *SimpleChaincode) readWaste(stub shim.ChaincodeStubInterface, args []str
 	key = args[0]
 	valAsbytes, err := stub.GetState(key)
 	if err != nil {
-		jsonResp = "{\"Error\":\"Failed to get state for " + key + "\"}"
-		return waste, errors.New(jsonResp)
+		//jsonResp = "{\"Error\":\"Failed to get state for " + key + "\"}"
+		fmt.Printf("retrieve WASTE: retrieve err: %s", err) 
+		return waste, err
+		//errors.New(jsonResp)
 	}
 	fmt.Println("Retrieving:" + string(valAsbytes))
 	err = json.Unmarshal(valAsbytes, &waste);
