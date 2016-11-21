@@ -105,7 +105,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	// Handle different functions
 	if function == "readWaste" { //read a variable
 		waste, err := t.readWaste(stub, args)
-		if err != nil { return nil, errors.New("Error retrieving waste information")}
+		if err != nil { return nil, err}
 		return json.Marshal(waste)
 		 
 	}
@@ -186,6 +186,7 @@ func (t *SimpleChaincode) readWaste(stub shim.ChaincodeStubInterface, args []str
 	err = json.Unmarshal(valAsbytes, &waste);
     if err != nil {	
 		fmt.Printf("retrieve WASTE: Corrupt Waste "+string(valAsbytes)+": %s", err) 
-		return waste, errors.New("RETRIEVE_WASTE: Corrupt waste record"+string(valAsbytes))	}
+		return waste, errors.New("RETRIEVE_WASTE: Corrupt waste record"+string(valAsbytes))
+	}
 	return waste, nil
 }
