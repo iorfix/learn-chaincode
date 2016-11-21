@@ -196,7 +196,7 @@ func (t *SimpleChaincode) readWasteB(stub shim.ChaincodeStubInterface, args []st
 
 // read - query function to read key/value pair
 func (t *SimpleChaincode) readWaste(stub shim.ChaincodeStubInterface, args []string) (Waste, error) {
-	var key, jsonResp string
+	var key string
 	var waste Waste
 	
 	if len(args) != 1 {
