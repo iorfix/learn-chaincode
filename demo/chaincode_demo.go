@@ -104,10 +104,10 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 
 	// Handle different functions
 	if function == "readWaste" { //read a variable
-		waste, err := t.readWaste(stub, args)
+		waste, err := t.readWasteB(stub, args)
 		if err != nil { return nil, err}
-		return json.Marshal(waste)
-		 
+		//return json.Marshal(waste)
+		 return waste, err
 	}
 	fmt.Println("query did not find func: " + function)
 
@@ -167,6 +167,23 @@ func (t *SimpleChaincode) get_username(stub shim.ChaincodeStubInterface) (string
 	return string(username), nil
 }
 
+
+func (t *SimpleChaincode) readWasteB(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var key, jsonResp string
+	
+	
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting name of the Waste id")
+	}
+
+	key = args[0]
+	valAsbytes, err := stub.GetState(key)
+	if err != nil {
+		jsonResp = "{\"Error\":\"Failed to get state for " + key + "\"}"
+		return nil, errors.New(jsonResp)
+	}
+	return valAsbytes, err
+}
 
 // read - query function to read key/value pair
 func (t *SimpleChaincode) readWaste(stub shim.ChaincodeStubInterface, args []string) (Waste, error) {
