@@ -97,6 +97,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	if function == "init" {
 		return t.Init(stub, "init", args)
 	} else if function == "newWaste" {
+		user := "PIPPO"
 		return t.newWaste(stub, user, args)
 	}
 	fmt.Println("invoke did not find func: " + function)
@@ -127,7 +128,7 @@ func (t *SimpleChaincode) newWaste(stub shim.ChaincodeStubInterface, user string
 	var id string
 	var quantity int
 	var timestamp int64
-	var err error
+
 	var waste Waste
 	fmt.Println("running write()")
 
@@ -136,26 +137,47 @@ func (t *SimpleChaincode) newWaste(stub shim.ChaincodeStubInterface, user string
 	}
 
 	id = args[0] //rename for funsies
-	quantity, err = strconv.Atoi(args[1])
+	quantity, _ = strconv.Atoi(args[1])
 	timestamp = makeTimestamp()
 	
 	waste.Id = id
 	waste.Producer = user
 	waste.QuantityProduced = quantity
 	waste.TimestampProduced = timestamp
-	
-	wByte, err := json.Marshal(waste)
-	fmt.Println("Writing:" + string(wByte))
-	if err != nil {
-		return nil, err
-	}
-	
-	err = stub.PutState(id, []byte(wByte)) //write the variable into the chaincode state
-	if err != nil {
-		return nil, err
-	}
-	return nil, nil
+	return writeWaste(stub, &waste)
+
 }
+
+
+func (t *SimpleChaincode) collectWaste(stub shim.ChaincodeStubInterface, user string, args []string) ([]byte, error) {
+
+//		Retriever			string  `json:"retriever"`
+//	TimestampRetrieved	int64	`json:"timestampRetrieved"`	//utc timestamp of assignment
+//	QualityRetrieved    int 	`json:"qualityRetrieved"`
+	
+	var waste Waste
+	var err error
+	if len(args)!=2 {
+		
+	}
+	id := args[0]
+	retriever := user
+	quality, _ := strconv.Atoi(args[1])
+
+	timestamp := makeTimestamp()
+	
+	waste, err = readWaste (stub, id)
+	if (err != nil) {
+		return nil, err
+	}
+	waste.Retriever = retriever
+	waste.TimestampRetrieved = timestamp
+	waste.QualityRetrieved = quality
+	return writeWaste(stub, &waste)
+	
+}
+
+
 
 // ============================================================================================================================
 // Make Timestamp - create a timestamp in ms
@@ -196,15 +218,11 @@ func (t *SimpleChaincode) readWasteB(stub shim.ChaincodeStubInterface, args []st
 }
 
 // read - query function to read key/value pair
-func (t *SimpleChaincode) readWaste(stub shim.ChaincodeStubInterface, args []string) (Waste, error) {
-	var key string
+func readWaste(stub shim.ChaincodeStubInterface, key string) (Waste, error) {
+	fmt.Println("Read Waste:" + key)
+	
 	var waste Waste
 	
-	if len(args) != 1 {
-		return waste, errors.New("Incorrect number of arguments. Expecting name of the Waste id")
-	}
-
-	key = args[0]
 	valAsbytes, err := stub.GetState(key)
 	if err != nil {
 		//jsonResp = "{\"Error\":\"Failed to get state for " + key + "\"}"
@@ -220,3 +238,19 @@ func (t *SimpleChaincode) readWaste(stub shim.ChaincodeStubInterface, args []str
 	}
 	return waste, nil
 }
+
+func writeWaste(stub shim.ChaincodeStubInterface, waste *Waste) ([]byte, error) {
+	wByte, err := json.Marshal(*waste)
+	fmt.Println("Writing:" + string(wByte))
+	if err != nil {
+		return nil, err
+	}
+	
+	err = stub.PutState(waste.Id, []byte(wByte)) //write the variable into the chaincode state
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+
+}
+
