@@ -97,8 +97,11 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	if function == "init" {
 		return t.Init(stub, "init", args)
 	} else if function == "newWaste" {
-		user := "PIPPO"
+		user := "PROD"
 		return t.newWaste(stub, user, args)
+	} else if function == "collect" {
+		user := "COLL"
+		return t.collectWaste(stub, user, args)
 	}
 	fmt.Println("invoke did not find func: " + function)
 
