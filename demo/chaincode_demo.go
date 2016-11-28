@@ -81,11 +81,14 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		return nil, errors.New("Incorrect number of arguments. Expecting key")
 	}
 	key := args[0]
+	fmt.Println("readkey:", key)
 	byteVal, err := readKeyState(stub, key)
+	fmt.Println("reading:", byteVal)
 	return byteVal, err
 }
 
 func (t *SimpleChaincode) newOpening(stub shim.ChaincodeStubInterface, user string, args []string) ([]byte, error) {
+	fmt.Println("Opening:" + user)
 	var chainuserarray []byte
 	var err error
 	var id uint32
@@ -94,13 +97,13 @@ func (t *SimpleChaincode) newOpening(stub shim.ChaincodeStubInterface, user stri
 		return nil, err
 	}
 	if (chainuserarray == nil) {
-		chainuserarray = make([]byte, 4)
+		chainuserarray = make([]byte, 0)
 	}
 	id = makeTimestamp()
 	idByteArr := make([]byte, 4)
     binary.LittleEndian.PutUint32(idByteArr, id)
-	
 	chainuserarray = append(chainuserarray, idByteArr...)
+	fmt.Println("new chainuserarray", id)
 	err = writeUserChain(stub, user, chainuserarray)
 	return nil, err
 	
