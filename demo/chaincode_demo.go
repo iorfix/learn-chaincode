@@ -59,11 +59,12 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 // Invoke isur entry point to invoke a chaincode function
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("invoke is running " + function)
-	caller, er := stub.GetCallerCertificate()
+	caller, er := stub.GetPayload()
 	if (er !=nil) {
 		fmt.Println(er)
 	}
-	fmt.Println("caller: " + string(caller))
+	fmt.Println("GetPayload: ", caller)
+	
 
 	//user, err := t.get_username(stub)
 	//user := "PIPPO"
