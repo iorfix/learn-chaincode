@@ -66,9 +66,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	fmt.Println("caller: " + string(caller))
 
 	//user, err := t.get_username(stub)
-	user := "PIPPO"
+	//user := "PIPPO"
 	
-	fmt.Println("username: " + user)
+	//fmt.Println("username: " + user)
 	
 	// Handle different functions
 	if function == "init" {
@@ -101,7 +101,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 }
 
 func (t *SimpleChaincode) newOpening(stub shim.ChaincodeStubInterface, user string, args []string) ([]byte, error) {
-	fmt.Println("Opening:" + user)
+	fmt.Println("Opening:" + user, args)
 		if len(args) != 4 {
 		return nil, errors.New("Incorrect number of arguments. Expecting lat, lng, open, close")
 	}
