@@ -102,7 +102,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 
 func (t *SimpleChaincode) newOpening(stub shim.ChaincodeStubInterface, user string, args []string) ([]byte, error) {
 	fmt.Println("Opening:" + user)
-		if len(args) != 3 {
+		if len(args) != 4 {
 		return nil, errors.New("Incorrect number of arguments. Expecting lat, lng, open, close")
 	}
 	var chainuserarray []byte
@@ -116,20 +116,33 @@ func (t *SimpleChaincode) newOpening(stub shim.ChaincodeStubInterface, user stri
 	if (chainuserarray == nil) {
 		chainuserarray = make([]byte, 0)
 	}
+	fmt.Println("prev chainuserarray", chainuserarray )
 	id = makeTimestamp()
 	idByteArr := make([]byte, 4)
 	idS := strconv.FormatUint(uint64(id), 10)
     binary.LittleEndian.PutUint32(idByteArr, id)
 	chainuserarray = append(chainuserarray, idByteArr...)
-	fmt.Println("new chainuserarray", id)
+	fmt.Println("new chainuserarray", chainuserarray)
 	err = writeUserChain(stub, user, chainuserarray)
 	
 	openbin.Id = id
 	openbin.Producer = user
 	openbin.Lat, err = strconv.ParseFloat(args[0], 64)
+	if (err !=nil) {
+		return nil, err
+	}
 	openbin.Lng, err = strconv.ParseFloat(args[1], 64)
+	if (err !=nil) {
+		return nil, err
+	}
 	openbin.TimestampOpened, err = strconv.ParseInt(args[2], 10, 64)
+	if (err !=nil) {
+		return nil, err
+	}
 	openbin.TimestampClosed, err = strconv.ParseInt(args[3], 10, 64)
+	if (err !=nil) {
+		return nil, err
+	}
 	openBinByte, err2 := json.Marshal(openbin)
 	if (err2 !=nil) {
 		return nil, err2
