@@ -19,14 +19,22 @@ package main
 import (
 	"errors"
 	"fmt"
-//	"strconv"
+	"strconv"
 	"time"
-//	"encoding/json"
+	"encoding/json"
 	"encoding/binary"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
+type OpenBinObj struct {
+	Id				  uint32	`json:"id"` 
+	Producer          string	`json:"producer"`
+	Lat				  float64	`json:"lat"`
+	Lng				  float64	`json:"lng"`
+	TimestampOpened	  int64	`json:"timestampOpened"`	//utc timestamp of creation
+	TimestampClosed	  int64	`json:"timestampClosed"`
+}
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
 }
@@ -51,6 +59,11 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 // Invoke isur entry point to invoke a chaincode function
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("invoke is running " + function)
+	caller, er := stub.GetCallerMetadata()
+	if (er !=nil) {
+		fmt.Println(er)
+	}
+	fmt.Println("caller: " + string(caller))
 
 	//user, err := t.get_username(stub)
 	user := "PIPPO"
@@ -89,9 +102,13 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 
 func (t *SimpleChaincode) newOpening(stub shim.ChaincodeStubInterface, user string, args []string) ([]byte, error) {
 	fmt.Println("Opening:" + user)
+		if len(args) != 3 {
+		return nil, errors.New("Incorrect number of arguments. Expecting lat, lng, open, close")
+	}
 	var chainuserarray []byte
 	var err error
 	var id uint32
+	var openbin OpenBinObj
 	chainuserarray, err = readChain (stub, user);
 	if (err != nil) {
 		return nil, err
@@ -101,10 +118,25 @@ func (t *SimpleChaincode) newOpening(stub shim.ChaincodeStubInterface, user stri
 	}
 	id = makeTimestamp()
 	idByteArr := make([]byte, 4)
+	idS := strconv.FormatUint(uint64(id), 10)
     binary.LittleEndian.PutUint32(idByteArr, id)
 	chainuserarray = append(chainuserarray, idByteArr...)
 	fmt.Println("new chainuserarray", id)
 	err = writeUserChain(stub, user, chainuserarray)
+	
+	openbin.Id = id
+	openbin.Producer = user
+	openbin.Lat, err = strconv.ParseFloat(args[0], 64)
+	openbin.Lng, err = strconv.ParseFloat(args[1], 64)
+	openbin.TimestampOpened, err = strconv.ParseInt(args[2], 10, 64)
+	openbin.TimestampClosed, err = strconv.ParseInt(args[3], 10, 64)
+	openBinByte, err2 := json.Marshal(openbin)
+	if (err2 !=nil) {
+		return nil, err2
+	}
+	fmt.Println("Marshalled:" + string(openBinByte))
+	
+	err = stub.PutState(idS, openBinByte)
 	return nil, err
 	
 }
