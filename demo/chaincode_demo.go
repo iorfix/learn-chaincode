@@ -59,7 +59,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 // Invoke isur entry point to invoke a chaincode function
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("invoke is running " + function)
-	caller, er := stub.GetCallerMetadata()
+	caller, er := stub.GetCallerCertificate()
 	if (er !=nil) {
 		fmt.Println(er)
 	}
@@ -95,7 +95,14 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	}
 	key := args[0]
 	fmt.Println("readkey:", key)
-	byteVal, err := readKeyState(stub, key)
+	var byteVal []byte
+	var err error
+	if (function == "readall") {
+		byteVal, err = readAllFromUser(stub, key)
+	} else {
+		byteVal, err = readKeyState(stub, key)
+	}
+	
 	fmt.Println("reading:", byteVal)
 	return byteVal, err
 }
@@ -191,5 +198,46 @@ func readKeyState(stub shim.ChaincodeStubInterface, key string) ([]byte, error) 
 	fmt.Println("Retrieving:" + string(valAsbytes))
 	return valAsbytes, err
 }
+
+func readAllFromUser(stub shim.ChaincodeStubInterface, key string) ([]byte, error) {
+	
+	chainuserarray, err := readChain(stub, key)
+	if err != nil {
+		return nil, err
+	}
+
+	chainuserint := convertByteArrayToUint32Array(&chainuserarray)
+	fmt.Println(chainuserint)
+	numElems := len(chainuserint)
+	openBinArr := make([]OpenBinObj, numElems)
+	for i := 0; i < numElems; i++ {
+		idConf :=  strconv.FormatUint(uint64(chainuserint[i]),10)
+		valAsbytes, err := readKeyState(stub, idConf)
+		if (err !=nil) {
+			fmt.Println("error reading:", idConf)
+			return nil, err
+		}
+		err = json.Unmarshal(valAsbytes, &openBinArr[i]);
+		fmt.Println("Read:", openBinArr[i])
+	}
+	fmt.Println("Fullread:", openBinArr)
+	
+	wByte, err2 := json.Marshal(&openBinArr)
+	return wByte, err2
+}
+
+func convertByteArrayToUint32Array(bytearray *[]byte) []uint32 {
+	numElems := len(*bytearray)/4
+	uintarray := make([]uint32, numElems)
+	for i := 0; i < numElems; i++ {
+		elemByte := (*bytearray)[i*4:i*4+4]
+		val := binary.LittleEndian.Uint32(elemByte)
+		uintarray[i] = val
+	}
+	fmt.Println(uintarray)
+	return uintarray
+}
+
+
 
 
