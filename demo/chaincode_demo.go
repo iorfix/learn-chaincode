@@ -48,6 +48,10 @@ func main() {
 
 // Init resets all the things
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+	
+	deployer, _ := stub.GetCallerMetadata()
+	fmt.Println("Deplyer:", deployer)
+	fmt.Println("Deplyer2:" + string(deployer))
 	if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
