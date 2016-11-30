@@ -49,14 +49,16 @@ func main() {
 // Init resets all the things
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	
-	deployer, _ := stub.GetCallerMetadata()
-	fmt.Println("Deplyer:", deployer)
-	fmt.Println("Deplyer2:" + string(deployer))
 	if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
-
-	return nil, nil
+	var users []string
+	usersByte, err2 := json.Marshal(users)
+	if (err2 !=nil) {
+		return nil, err2
+	}
+	err := stub.PutState("USERLIST", usersByte)
+	return nil, err
 }
 
 
@@ -79,8 +81,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	if function == "init" {
 		return t.Init(stub, "init", args)
 	} else if function == "newOpening" {
-		user := "PROD"
-		return t.newOpening(stub, user, args)
+		return t.newOpening(stub, args)
 //	} else if function == "collect" {
 //		user := "COLL"
 //		return t.collectWaste(stub, user, args)
@@ -112,11 +113,12 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	return byteVal, err
 }
 
-func (t *SimpleChaincode) newOpening(stub shim.ChaincodeStubInterface, user string, args []string) ([]byte, error) {
-	fmt.Println("Opening:" + user, args)
-		if len(args) != 4 {
-		return nil, errors.New("Incorrect number of arguments. Expecting lat, lng, open, close")
+func (t *SimpleChaincode) newOpening(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	fmt.Println("Opening:",  args)
+		if len(args) != 5 {
+		return nil, errors.New("Incorrect number of arguments. Expecting user, lat, lng, open, close")
 	}
+	user := args[0]
 	var chainuserarray []byte
 	var err error
 	var id uint32
@@ -127,6 +129,10 @@ func (t *SimpleChaincode) newOpening(stub shim.ChaincodeStubInterface, user stri
 	}
 	if (chainuserarray == nil) {
 		chainuserarray = make([]byte, 0)
+		erradd := addnewuser(stub, user)
+		if (erradd !=nil) {
+			return nil, erradd
+		}
 	}
 	fmt.Println("prev chainuserarray", chainuserarray )
 	id = makeTimestamp()
@@ -139,19 +145,19 @@ func (t *SimpleChaincode) newOpening(stub shim.ChaincodeStubInterface, user stri
 	
 	openbin.Id = id
 	openbin.Producer = user
-	openbin.Lat, err = strconv.ParseFloat(args[0], 64)
+	openbin.Lat, err = strconv.ParseFloat(args[1], 64)
 	if (err !=nil) {
 		return nil, err
 	}
-	openbin.Lng, err = strconv.ParseFloat(args[1], 64)
+	openbin.Lng, err = strconv.ParseFloat(args[2], 64)
 	if (err !=nil) {
 		return nil, err
 	}
-	openbin.TimestampOpened, err = strconv.ParseInt(args[2], 10, 64)
+	openbin.TimestampOpened, err = strconv.ParseInt(args[3], 10, 64)
 	if (err !=nil) {
 		return nil, err
 	}
-	openbin.TimestampClosed, err = strconv.ParseInt(args[3], 10, 64)
+	openbin.TimestampClosed, err = strconv.ParseInt(args[4], 10, 64)
 	if (err !=nil) {
 		return nil, err
 	}
@@ -164,6 +170,22 @@ func (t *SimpleChaincode) newOpening(stub shim.ChaincodeStubInterface, user stri
 	err = stub.PutState(idS, openBinByte)
 	return nil, err
 	
+}
+
+func addnewuser(stub shim.ChaincodeStubInterface, newuser string) (error) {
+	valAsbytes, err := stub.GetState("USERLIST")
+	if (err != nil) {
+		return err
+	}
+	var userlist []string
+	err = json.Unmarshal(valAsbytes, &userlist);
+	userlist = append(userlist, newuser)
+	fmt.Println("new userlist:" , userlist)
+	wByte, err2 := json.Marshal(&userlist)
+	if (err2!=nil) {
+		return err2
+	}
+	return stub.PutState("USERLIST", wByte)
 }
 
 func readChain(stub shim.ChaincodeStubInterface, user string) ([]byte, error) {
