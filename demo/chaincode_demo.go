@@ -103,8 +103,10 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	fmt.Println("readkey:", key)
 	var byteVal []byte
 	var err error
-	if (function == "readall") {
+	if (function == "readalluser") {
 		byteVal, err = readAllFromUser(stub, key)
+	} else if (function == "readall") {
+		byteVal, err = readAll(stub)
 	} else {
 		byteVal, err = readKeyState(stub, key)
 	}
@@ -173,12 +175,11 @@ func (t *SimpleChaincode) newOpening(stub shim.ChaincodeStubInterface, args []st
 }
 
 func addnewuser(stub shim.ChaincodeStubInterface, newuser string) (error) {
-	valAsbytes, err := stub.GetState("USERLIST")
-	if (err != nil) {
-		return err
+	
+	userlist, err := readUserList(stub)
+	if (err!=nil) {
+		return  err
 	}
-	var userlist []string
-	err = json.Unmarshal(valAsbytes, &userlist);
 	userlist = append(userlist, newuser)
 	fmt.Println("new userlist:" , userlist)
 	wByte, err2 := json.Marshal(&userlist)
@@ -186,6 +187,16 @@ func addnewuser(stub shim.ChaincodeStubInterface, newuser string) (error) {
 		return err2
 	}
 	return stub.PutState("USERLIST", wByte)
+}
+
+func readUserList(stub shim.ChaincodeStubInterface) ([]string, error) {
+	valAsbytes, err := stub.GetState("USERLIST")
+	if (err != nil) {
+		return nil, err
+	}
+	var userlist []string
+	err = json.Unmarshal(valAsbytes, &userlist);
+	return userlist, err
 }
 
 func readChain(stub shim.ChaincodeStubInterface, user string) ([]byte, error) {
@@ -227,7 +238,16 @@ func readKeyState(stub shim.ChaincodeStubInterface, key string) ([]byte, error) 
 }
 
 func readAllFromUser(stub shim.ChaincodeStubInterface, key string) ([]byte, error) {
-	
+	openBinArr, err := readAllFromUserObj(stub, key)
+	if (err != nil) {
+		return nil, err
+	}
+	wByte, err2 := json.Marshal(&openBinArr)
+	return wByte, err2
+
+}
+func readAllFromUserObj(stub shim.ChaincodeStubInterface, key string) ([]OpenBinObj, error) {
+
 	chainuserarray, err := readChain(stub, key)
 	if err != nil {
 		return nil, err
@@ -248,10 +268,11 @@ func readAllFromUser(stub shim.ChaincodeStubInterface, key string) ([]byte, erro
 		fmt.Println("Read:", openBinArr[i])
 	}
 	fmt.Println("Fullread:", openBinArr)
-	
-	wByte, err2 := json.Marshal(&openBinArr)
-	return wByte, err2
+	return openBinArr, nil
 }
+
+
+
 
 func convertByteArrayToUint32Array(bytearray *[]byte) []uint32 {
 	numElems := len(*bytearray)/4
@@ -265,6 +286,23 @@ func convertByteArrayToUint32Array(bytearray *[]byte) []uint32 {
 	return uintarray
 }
 
-
+func readAll(stub shim.ChaincodeStubInterface) ([]byte, error) {
+	userlist, err := readUserList(stub)
+	if (err!=nil) {
+		return nil, err
+	}
+	numUsers := len(userlist)
+	openBinArr := make([]OpenBinObj, 0)
+	for i := 0; i<numUsers; i++ {
+		openUsrArr, err2 := readAllFromUserObj(stub, userlist[i])
+		if (err2!=nil) {
+			return nil, err2
+		}
+		openBinArr = append(openBinArr, openUsrArr...)
+	}
+	fmt.Println("Read:", openBinArr)
+	wByte, err2 := json.Marshal(&openBinArr)
+	return wByte, err2
+}
 
 
